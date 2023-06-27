@@ -210,21 +210,21 @@ HBV <- function(pars,P,Temp,PET,routing){
   if (routing == 1){ 
     step <- 0.005  #du or integration step
     
-    i <- (0:step:MAXBAS) 
+    i <- seq(0, MAXBAS, step) 
     h <- rep(0, length(i)) 
     
-    j <- which(i < MAXBAS/2) 
-    h(j) <- step * (i[j] * 4 / MAXBAS ^ 2)  #constructs the triangular weighting function
+    j <- which(i < MAXBAS / 2) 
+    h[j] <- step * (i[j] * 4 / MAXBAS ^ 2)  #constructs the triangular weighting function
     
     j <- which(i >= MAXBAS/2) 
-    h(j) = step * (4 / MAXBAS - i[j] * 4 / MAXBAS ^ 2)   #constructs the triangular weighting function
+    h[j] = step * (4 / MAXBAS - i[j] * 4 / MAXBAS ^ 2)   #constructs the triangular weighting function
     
     #allow base of weighting function to be noninteger, adjusts for extra weights for the last day
     if (MAXBAS %% 1 > 0){          
-      I <- (1:length(i) / MAXBAS-1:length(i)) 
-      I <- I:length(i)
-    }else{
-      I <- (1:length(i) / floor(MAXBAS)-1:length(i)) 
+      I <- seq(1, length(i)/(MAXBAS-1), length.out = length(i))
+      I <- c(I, length(i))
+    } else {
+      I <- seq(1, length(i)/floor(MAXBAS)-1, length.out = length(i))
     }
     
     MAXBAS_w <- rep(0, length(I)) 
@@ -234,17 +234,13 @@ HBV <- function(pars,P,Temp,PET,routing){
       MAXBAS_w[k] = sum(h[floor(I[k-1]):floor(I[k])]) 
     }
     #make sure integration sums to unity for mass balance
-    MAXBAS_w <- MAXBAS_w[2:end] / sum(MAXBAS_w[2:end])  
+    MAXBAS_w <- MAXBAS_w[2:length(MAXBAS_w)] / sum(MAXBAS_w[2:length(MAXBAS_w)])  
     
     # ROUTING OF DISCHARGE COMPONENTS
-    qs <- conv(Q_STZ,MAXBAS_w)  
-    qs <- qs[1:length(P)] #routed shallow flow = Saturated overland flow or other rapid process
-    qi <- conv(Q_SUZ,MAXBAS_w)  
-    qi <- qi[1:length(P)] #routed upper zone flow = interflow
-    qb <- conv(Q_SLZ,MAXBAS_w)  
-    qb <- qb[1:length(P)] #routed lower zone flow = baseflow
-    q  <- conv(Qgen,MAXBAS_w)  
-    q  <- q[1:length(P)]  #total flow routed to catchment outlet
+    qs <- convolve(Q_STZ, MAXBAS_w, type = "open")[1:length(P)]  # routed shallow flow = Saturated overland flow or other rapid process
+    qi <- convolve(Q_SUZ, MAXBAS_w, type = "open")[1:length(P)]  # routed upper zone flow = interflow
+    qb <- convolve(Q_SLZ, MAXBAS_w, type = "open")[1:length(P)]  # routed lower zone flow = baseflow
+    q <- convolve(Qgen, MAXBAS_w, type = "open")[1:length(P)]  # total flow routed to catchment outlet
   }else{
     
     ## NO ROUTING
