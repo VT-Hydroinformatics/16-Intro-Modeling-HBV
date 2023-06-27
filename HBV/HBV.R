@@ -216,25 +216,27 @@ HBV <- function(pars,P,Temp,PET,routing){
     j <- which(i < MAXBAS / 2) 
     h[j] <- step * (i[j] * 4 / MAXBAS ^ 2)  #constructs the triangular weighting function
     
-    j <- which(i >= MAXBAS/2) 
-    h[j] = step * (4 / MAXBAS - i[j] * 4 / MAXBAS ^ 2)   #constructs the triangular weighting function
+    j <- which(i>= MAXBAS / 2)
+    h[j] <- step * (4 / MAXBAS - i[j] * 4 / MAXBAS ^ 2)#constructs the triangular weighting function
     
     #allow base of weighting function to be noninteger, adjusts for extra weights for the last day
     if (MAXBAS %% 1 > 0){          
-      I <- seq(1, length(i)/(MAXBAS-1), length.out = length(i))
+      I <- seq(1, length(i)) / seq((MAXBAS-1), length(i))
       I <- c(I, length(i))
     } else {
-      I <- seq(1, length(i)/floor(MAXBAS)-1, length.out = length(i))
+      I <- seq(1, length(i)) / seq(floor(MAXBAS)-1, length(i))
     }
     
     MAXBAS_w <- rep(0, length(I)) 
     
     #integration of function
     for (k in 2:length(I)){  
-      MAXBAS_w[k] = sum(h[floor(I[k-1]):floor(I[k])]) 
+      MAXBAS_w[k] = sum(
+        h[floor(I[k-1]) : floor(I[k])]) 
     }
     #make sure integration sums to unity for mass balance
-    MAXBAS_w <- MAXBAS_w[2:length(MAXBAS_w)] / sum(MAXBAS_w[2:length(MAXBAS_w)])  
+    MAXBAS_w <- MAXBAS_w[2:length(MAXBAS_w)] / 
+      sum(MAXBAS_w[2:length(MAXBAS_w)], na.rm = TRUE)  
     
     # ROUTING OF DISCHARGE COMPONENTS
     qs <- convolve(Q_STZ, MAXBAS_w, type = "open")[1:length(P)]  # routed shallow flow = Saturated overland flow or other rapid process
