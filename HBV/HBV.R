@@ -221,10 +221,10 @@ HBV <- function(pars,P,Temp,PET,routing){
     
     #allow base of weighting function to be noninteger, adjusts for extra weights for the last day
     if (MAXBAS %% 1 > 0){          
-      I <- seq(from = 1, to = length(i), by =  length(i) / MAXBAS-1)
+      I <- seq(from = 1, to = length(i), by =  (length(i)-1) / MAXBAS)
       I <- c(I, length(i))
     } else {
-      I <- seq(from = 1, to = length(i), by = length(i) / (floor(MAXBAS) - 1))
+      I <- seq(from = 1, to = length(i), by = (length(i)-1) / MAXBAS)
     }
     
     MAXBAS_w <- rep(0, length(I)) 
