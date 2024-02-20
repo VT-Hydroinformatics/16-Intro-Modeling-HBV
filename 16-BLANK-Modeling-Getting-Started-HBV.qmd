@@ -1,7 +1,8 @@
 ---
-editor_options: 
-  markdown: 
-    wrap: 72
+title: "16 - Modeling Intro"
+format:
+  html: 
+    self-contained: true
 ---
 
 # Intro to Modeling - Getting Started with HBV {#modelingintro}
@@ -65,7 +66,7 @@ rainfall‐runoff modelling, International Journal of River Basin
 Management, 6:2, 109-122, DOI: 10.1080/15715124.2008.9635341
 
 ```{r}
-source('HBV/HBV.R')
+
 ```
 
 ## Read in Precip and Temp
@@ -105,24 +106,7 @@ filter to our start and end date.
 Then we will pull out just the data, so it can be passed to the model.
 
 ```{r}
-start <- mdy("01-01-2009")
-end <- mdy("12-31-2012")
 
-#Precip
-P1 <- read_csv("HBV/Pwd2009-2012.csv") %>% 
-         select(DATE, WS_3) %>%
-         mutate(DATE = ymd(DATE)) %>%
-         filter(DATE >= start & DATE <= end)
-
-P <- P1$WS_3
-
-#Temp in deg C
-Temp1 <- read_csv("HBV/Tdm2009-2012.csv")%>%
-         select(DATE, STA_1) %>%
-         mutate(DATE = ymd(DATE)) %>%
-         filter(DATE >= start & DATE <= end)
-
-Temp <- Temp1$STA_1
 ```
 
 ## Calculate PET
@@ -251,9 +235,7 @@ look at what it outputs.
 How can we tell how this did at modeling flow in watershed 3?
 
 ```{r}
-ModelOutput <- HBV(params, P, Temp, PET, routing)
 
-head(ModelOutput)
 ```
 
 ## Import observed streamflow data
@@ -273,21 +255,14 @@ site.
 
 ```{r}
 #Streamflow mm/d
-Qobs1 <- read_csv("HBV/SWD2009-2012.csv") %>%
-         select(DATE, WS_3) %>%
-         mutate(DATE = ymd(DATE)) %>%
-         filter(DATE >= start & DATE <= end)
 
-Qobs <- Qobs1$WS_3
-
-ModelOutput <- bind_cols(ModelOutput, Qobs1)
 ```
 
 ## Compare observed and modeled discharge graphically
 
 Now that we have the observed values glued on to our model output, we
 can plot the two and see how they compare. Below we will plot the
-modelled and observed discharge as two lines on a ggplot.
+modeled and observed discharge as two lines on a ggplot.
 
 Because the model starts out with its storages at zero, it takes some
 time for it to actually approximate real conditions. For this reason,
@@ -311,12 +286,7 @@ a plotly graph. From here on out we will use plotly to look at our
 modeling results so we can investigate them more thoroughly.
 
 ```{r}
-OutputTrim <- filter(ModelOutput, DATE >= mdy("01-01-2011"))
 
-ggplot(OutputTrim, aes(x = DATE, y = WS_3, color = "Measured"))+
-  geom_line()+
-  geom_line(aes(y = q, color = "Modelled"))+
-  ylab("Discharge (mm/d)")
 ```
 
 ## Compare observed and modelled discharge with interactive graph
@@ -330,10 +300,10 @@ and if you hover over one of the lines, it will show you the values in a
 dialogue box. There is a lot of other functionality as well, which you
 can explore in the menu in the upper right.
 
+You can create a similar graph by saving the one above and passing it to ggplotly()!
+
 ```{r}
-OutputTrim %>% plot_ly(x = ~DATE) %>% 
-        add_trace(y = ~q, name = 'Modeled',  type = 'scatter', mode = 'lines') %>% 
-        add_trace(y = ~WS_3, name = 'Measured',  type = 'scatter', mode = 'lines')
+
 ```
 
 ## Measure how well the model fits with NSE
@@ -349,11 +319,11 @@ Efficiency (NSE).
 
 Basically, the NSE looks at how much better your model run did that if
 you had just used the mean discharge for the data record as your
-"modelled results". It does this by comparing how far off the observed
-values where from the mean discharge to how far off the modeled values
+"modeled results". It does this by comparing how far off the observed
+values were from the mean discharge to how far off the modeled values
 were from the observed discharge.
 
-Mathematically NSE the sum of the squared differences between the
+Mathematically NSE is the sum of the squared differences between the
 modeled and observed discharge divided by the sum of the squared
 differences between the observed and mean discharge, subtracted by 1.
 
@@ -371,10 +341,7 @@ do? Does this make sense with the timeseries we looked at above?
 
 ```{r}
 #Calculate NSE
-NSE <- 1 - ((sum((OutputTrim$q - OutputTrim$WS_3) ^ 2)) / 
-                 sum((OutputTrim$WS_3 - mean(OutputTrim$WS_3)) ^ 2))
 
-NSE
 
 ```
 
